@@ -3,9 +3,15 @@ import gzip
 import numpy as np
 
 
-def load_mnist(path, kind='train'):
+class FashionMNIST:
+
+    def __init__(self, path, validation=False):
+     
+
+
+def load_fashion(path, kind='train'):
     """
-    Load MNIST data.
+    Load Fashion MNIST data.
 
     Parameters:
     ----------
