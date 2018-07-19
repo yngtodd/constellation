@@ -99,6 +99,7 @@ def ensemble(clfs, X_train, y_train, X_test, y_test, nfolds=5):
 
 def main():
     parser = argparse.ArgumentParser(description='Ensembling HyperSpace models')
+    parser.add_argument('--data_path', type=str, default='/home/todd/kirjasto/constellation/constellation/data/fashion')
     parser.add_argument('--results_dir', type=str, help='Path to results directory.')
     args = parser.parse_args()
 
@@ -113,8 +114,11 @@ def main():
         model = GradientBoostingClassifier(max_depth=max_depth, learning_rate=lr)
         clfs.append(model)
 
+    fashion = FashionMNIST(args.data_path)
+    fashion.create_validation()
+
     # Using the training and test sets from `optimize.py`
-    X_train, _, X_test, y_train, _, y_test = load_data(0.25, 0.25)
+    X_train, y_train, _, _, X_test, y_test = fashion.get_data()
     y_preds, y_proba = ensemble(clfs, X_train, y_train, X_test, y_test)
 
     acc_test = accuracy_score(y_test, y_preds)

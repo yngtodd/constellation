@@ -51,7 +51,7 @@ def objective(params):
         - Order preserved from list passed to hyperdrive's hyperparameters argument.
     """
     max_depth, n_estimators = params
-    clf = GradientBoostingClassifier(max_depth=max_depth, n_estimators=n_estimators)
+    clf = GradientBoostingClassifier(max_depth=max_depth, n_estimators=n_estimators, verbose=1)
     
     clf.fit(X_train, y_train)
     # Training accuracy
