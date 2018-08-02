@@ -9,8 +9,8 @@ class FashionMNIST:
 
     def __init__(self, path):
         self.path = path
-        self.X_train, self.y_train = self.load_fashion()
-        self.X_test, self.y_test = self.load_fashion(kind='t10k')
+        self.X_train, self.y_train = self._load_fashion()
+        self.X_test, self.y_test = self._load_fashion(kind='t10k')
         self.X_val, self.y_val = None, None
 
     def __repr__(self):
@@ -26,7 +26,7 @@ class FashionMNIST:
 
         return message
 
-    def load_fashion(self, kind='train'):
+    def _load_fashion(self, kind='train'):
         """
         Load Fashion MNIST data.
 
@@ -43,6 +43,7 @@ class FashionMNIST:
         -------
         * `images` [ndarray]
           Image data
+
         * `labels` [ndarray]
           Label information
 
