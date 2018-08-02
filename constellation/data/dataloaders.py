@@ -21,8 +21,8 @@ class FashionMNIST:
             message += 'Validation set Images: {}, Labels: {}\n'.format(self.X_val.shape, self.y_val.shape)
         else:
             message += 'Validation set Images: None, Labels: None\n'
-        
-        message += 'Test set Images: {}, Labels: {}'.format(self.X_test.shape, self.y_test.shape)            
+
+        message += 'Test set Images: {}, Labels: {}'.format(self.X_test.shape, self.y_test.shape)
 
         return message
 
@@ -69,6 +69,4 @@ class FashionMNIST:
             train_test_split(self.X_train, self.y_train, test_size=val_size, random_state=random_state)
 
     def get_data(self):
-        return self.X_train, self.y_train, self.X_val, self.y_val, self.X_test, self.y_test    
-
-
+        return self.X_train, self.y_train, self.X_val, self.y_val, self.X_test, self.y_test
