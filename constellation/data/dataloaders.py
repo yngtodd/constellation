@@ -2,15 +2,17 @@ import os
 import gzip
 
 import numpy as np
+
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
 
 class FashionMNIST:
 
-    def __init__(self, path):
+    def __init__(self, path, stdscaling=False):
         self.path = path
-        self.X_train, self.y_train = self._load_fashion()
-        self.X_test, self.y_test = self._load_fashion(kind='t10k')
+        self.X_train, self.y_train = self._load_fashion(stdscaling=stdscaling)
+        self.X_test, self.y_test = self._load_fashion(kind='t10k', stdscaling=stdscaling)
         self.X_val, self.y_val = None, None
 
     def __repr__(self):
@@ -26,7 +28,7 @@ class FashionMNIST:
 
         return message
 
-    def _load_fashion(self, kind='train'):
+    def _load_fashion(self, kind='train', stdscaling=False):
         """
         Load Fashion MNIST data.
 
@@ -38,6 +40,9 @@ class FashionMNIST:
         * `kind` [str]
           Determines whether to load train or test set.
           Options - 'train' or 't10k'
+
+        * `stdscaling`: [bool]
+          Whether to standardize pixel values to mean 0.0, var 1.0
 
         Returns:
         -------
@@ -61,6 +66,10 @@ class FashionMNIST:
         with gzip.open(images_path, 'rb') as imgpath:
             images = np.frombuffer(imgpath.read(), dtype=np.uint8,
                                    offset=16).reshape(len(labels), 784)
+
+        if stdscaling:
+            sc = StandardScaler()
+            images = sc.fit_transform(images)
 
         return images, labels
 
