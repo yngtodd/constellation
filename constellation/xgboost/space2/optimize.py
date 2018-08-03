@@ -1,5 +1,6 @@
 import os
 import argparse
+import numpy as np
 
 import random
 import pandas as pd
@@ -75,10 +76,13 @@ def objective(params):
       early_stopping_rounds=early_stop, verbose_eval=True
     )
    
-    val_loss = progress['validation']
-    print(f'Mean validation error: {val_loss}')
+    val_metric = progress['validation']
+    merror_val = np.array(val_metric['merror'])
 
-    return val_loss 
+    merror_mean = merror_val.mean()
+    print(f'Mean validation error: {merror_mean}')
+
+    return merror_mean 
 
 
 def main():
