@@ -50,18 +50,22 @@ def objective(params):
         - Controlled by hyperspaces's hyperdrive function.
         - Order preserved from list passed to hyperdrive's hyperparameters argument.
     """
-    eta, max_depth = params
+    eta, max_depth, subsample, colsample_bytree, alpha, lambda_ = params
 
     param_list = [
       ("eta", eta), 
       ("max_depth", max_depth),
+      ("subsample", subsample), 
+      ("colsample_bytree", colsample_bytree),
+      ("alpha", alpha), 
+      ("lambda", lambda_),
       ("objective", "multi:softmax"), 
       ("eval_metric", "merror"),
       ("num_class", 10)
     ]
 
-    n_rounds = 2  
-    early_stop = 2 
+    n_rounds = 600 
+    early_stop = 50 
 
     train = xgb.DMatrix(X_train, label=y_train)
     val = xgb.DMatrix(X_val, label=y_val)
@@ -78,10 +82,7 @@ def objective(params):
    
     val_metric = progress['validation']
     merror_val = np.array(val_metric['merror'])
-
     merror_mean = merror_val.mean()
-    print(f'Mean validation error: {merror_mean}')
-
     return merror_mean 
 
 
@@ -104,7 +105,11 @@ def main():
     X_train, y_train, X_val, y_val, X_test, y_test = fashion.get_data()
 
     hparams = [(0.001, 0.1),  # eta 
-               (1, 10)]     # max_depth
+               (1, 10),       # max_depth
+               (0.5, 1.0),    # subsample
+               (0.5, 1.0),    # colsample_bytree
+               (0.0, 1.0),    # alpha
+               (0.0, 1.0)]    # lambda
 
     hyperdrive(objective=objective,
                hyperparameters=hparams,
