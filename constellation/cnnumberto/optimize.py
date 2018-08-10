@@ -109,6 +109,11 @@ def model_cnn(num_classes=10, kernel1=5, kernel2=5, kernel3=1, lr=0.01):
     sgd = SGD(lr=lrate, momentum=0.9, decay=decay, nesterov=True)
     model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
     return model
+
+
+def objective(params):
+    pass
+
     
 def main():
     #########################################################
@@ -118,10 +123,12 @@ def main():
     # I will reshape the train set to have (60k,1) shape, i.e. each row will contain a 28 by 28 matrix of pixel color values.
     # Same for the test set.
     #########################################################
+    global y_train_CNN, X_train_CNN
     y_train_CNN = train.ix[:,0].values.astype('int32') # only labels i.e targets digits
     X_train_CNN = np.array(train.iloc[:,1:].values).reshape(train.shape[0], 1, 28, 28).astype(np.uint8)# reshape to be [samples][pixels][width][height]
     print('train shape after reshape: {}'.format(X_train_CNN.shape))
-    
+   
+    global y_test_CNN, X_test_CNN
     y_test_CNN = test.ix[:,0].values.astype('int32') # only labels i.e targets digits
     X_test_CNN = np.array(test.iloc[:,1:].values).reshape((test.shape[0], 1, 28, 28)).astype(np.uint8)
     print('test shape after reshape: {}'.format(X_test_CNN.shape))
