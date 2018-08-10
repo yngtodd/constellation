@@ -1,3 +1,4 @@
+import argparse
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 
@@ -5,6 +6,10 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 import math as mt
+
+from mpi4py import MPI
+from hyperspace import hyperdrive
+from hyperspace.kepler import load_results
 
 from keras.models import Sequential
 from keras.layers import Dense , Dropout , Flatten
@@ -50,7 +55,7 @@ callbacks = [
 ]
 
 # k-fold configuration
-n_splits = 5
+n_splits = 2 
 
 # get data
 test  = pd.read_csv('../../data/fashion-mnist_test.csv')
@@ -58,31 +63,21 @@ train = pd.read_csv('../../data/fashion-mnist_train.csv')
 print('train shape: {}'.format(train.shape))
 print('test shape: {}'.format(test.shape))
 
-"""Return the sample arithmetic mean of data."""
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
+
+
 def mean(numbers):
+    """Return the sample arithmetic mean of data."""
     return float(sum(numbers)) / max(len(numbers), 1)
-"""Return sum of square deviations of sequence data."""    
+
+
 def sum_of_square_deviation(numbers,mean):
+    """Return sum of square deviations of sequence data."""
     return float(1/len(numbers) * sum((x - mean)** 2 for x in numbers)) 
 
-"""Convolutional Neural Network
 
-The network topology can be summarized as follows:
-
-    Convolutional layer with 32 feature maps of size 5×5.
-    Pooling layer taking the max over 2*2 patches.
-    Convolutional layer with 64 feature maps of size 5×5.
-    Pooling layer taking the max over 2*2 patches.
-    Convolutional layer with 128 feature maps of size 1×1.
-    Pooling layer taking the max over 2*2 patches.
-    Flatten layer.
-    Fully connected layer with 1024 neurons and rectifier activation.
-    Dropout layer with a probability of 50%.
-    Fully connected layer with 510 neurons and rectifier activation.
-    Dropout layer with a probability of 50%.
-    Output layer.
-
-"""
 def model_cnn(num_classes=10, kernel1=5, kernel2=5, kernel3=1, lr=0.01):
     # create model
     model = Sequential()
@@ -111,18 +106,94 @@ def model_cnn(num_classes=10, kernel1=5, kernel2=5, kernel3=1, lr=0.01):
     return model
 
 
+class Log:
+
+    def __init__(self, colnames, savepath, rank):
+        self.colnames = colnames
+        self.log = pd.DataFrame(columns=self.colnames)
+        self.savepath = savepath
+        self.rank = rank
+        self.iter = 0
+
+    def update(self, name, acc_train, acc_val, ll):
+        name = name + str(self.iter)
+        entry = pd.DataFrame([[name, acc_train*100, acc_val*100, ll]], columns=self.colnames)
+        self.log = self.log.append(entry)
+        self.iter += 1
+
+    def save(self):
+        filename = 'log' + str(self.rank)
+        logfile = os.path.join(self.savepath, filename)
+        self.log.to_csv(logfile)
+
+
 def objective(params):
-    pass
+    kernel1, kernel2, kernel3, lr = params
+
+    acc_scores = []
+    for fold, (train_index, test_index) in enumerate(kf.split(X_train)):
+        print('\n Fold %d'%(fold))
+
+        X_tr, X_v = X_train[train_index], X_train[test_index]
+        y_tr, y_v = y_train[train_index], y_train[test_index]
+        # build the model
+        model = model_cnn(kernel1=kernel1, kernel2=kernel2, kernel3=kernel3, lr=lr)
+        # fit model
+        model.fit(
+            X_tr,
+            y_tr,
+            epochs=epochs,
+            validation_data=(X_v, y_v),
+            verbose=0,
+            batch_size=batch_size,
+            callbacks=callbacks,
+            shuffle=True
+        )
+
+        acc = model.evaluate(X_v, y_v, verbose=0)
+        acc_scores.append(acc[1])
+
+        print('Fold %d: Accuracy %.2f%%'%(fold, acc[1]*100))
+
+    print('Accuracy scores: ', acc_scores)
+
+    mean_acc = mean(acc_scores)
+    standard_deviation_acc = mt.sqrt(sum_of_square_deviation(acc_scores,mean_acc))
+
+    print('=====================')
+    print( 'Mean Accuracy %f'%mean_acc)
+    print('=====================')
+    print('=====================')
+    print( 'Stdev Accuracy %f'%standard_deviation_acc)
+    print('=====================')
+
+    model = model_cnn(num_classes)
+    # Fit the final model
+    history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, batch_size=batch_size, callbacks=callbacks, verbose=2)
+
+    # Final evaluation of the model
+    scores = model.evaluate(X_val, y_val, verbose=0)
+    loss_val = 100-scores[1]*100
+    acc_val = scores[1]*100
+
+    print("Error: %.2f%%" % loss_val)
+    print("Accuracy: %.2f%%" % acc_val)
+
+    name = 'CNN'
+    logger.update(name, mean_acc, acc_val, loss)
+    return loss_val
 
     
 def main():
-    #########################################################
-    # DATA PREPARATION
-    # The train set has 60k rows and 784 columns, so its shape is (60k,784). 
-    # Each row is a 28 by 28 pixel picture. 
-    # I will reshape the train set to have (60k,1) shape, i.e. each row will contain a 28 by 28 matrix of pixel color values.
-    # Same for the test set.
-    #########################################################
+    parser = argparse.ArgumentParser(description='Setup experiment.')
+    parser.add_argument('--results_dir', type=str, help='Path to results directory.')
+    parser.add_argument('--log_dir', type=str, default='./logs', help='Path to save logs')
+    args = parser.parse_args()
+
+    global logger
+    log_cols=["Classifier", "Train Accuracy (Mean)", "Val Accuracy", "Loss"]
+    logger = Log(colnames=log_cols, savepath=args.log_dir, rank=rank)
+
     global y_train_CNN, X_train_CNN
     y_train_CNN = train.ix[:,0].values.astype('int32') # only labels i.e targets digits
     X_train_CNN = np.array(train.iloc[:,1:].values).reshape(train.shape[0], 1, 28, 28).astype(np.uint8)# reshape to be [samples][pixels][width][height]
@@ -145,66 +216,36 @@ def main():
     y_train_CNN = to_categorical(y_train_CNN)
     y_test_CNN = to_categorical(y_test_CNN)
     num_classes = y_train_CNN.shape[1]
-    
+   
+    global X_train, X_val, y_train, y_val
     X_train = X_train_CNN
     X_val = X_test_CNN
     y_train = y_train_CNN
     y_val = y_test_CNN
-    
-    #########################################################
-    # BUILDE THE MODEL AND EVALUATE IT USING K-FOLD
-    #########################################################
-   
+
+    global kf
     kf = KFold(n_splits=n_splits, random_state=seed, shuffle=True)
     kf.get_n_splits(X_train)
-    
-    acc_scores = list()
-    
-    for fold, (train_index, test_index) in enumerate(kf.split(X_train)):
-        print('\n Fold %d'%(fold))
-        
-        X_tr, X_v = X_train[train_index], X_train[test_index]
-        y_tr, y_v = y_train[train_index], y_train[test_index]
-        # build the model
-        model = model_cnn(num_classes)
-        # fit model
-        model.fit(
-            X_tr, 
-            y_tr, 
-            epochs=epochs,
-            validation_data=(X_v, y_v),
-            verbose=2,
-            batch_size=batch_size,
-            callbacks=callbacks,
-            shuffle=True
-        )
-         
-        acc = model.evaluate(X_v, y_v, verbose=0)
-        acc_scores.append(acc[1])
-        
-        print('Fold %d: Accuracy %.2f%%'%(fold, acc[1]*100))
-    
-    print('Accuracy scores: ', acc_scores)
-    
-    mean_acc = mean(acc_scores)        
-    standard_deviation_acc = mt.sqrt(sum_of_square_deviation(acc_scores,mean_acc))
-        
-    print('=====================')
-    print( 'Mean Accuracy %f'%mean_acc)
-    print('=====================')
-    print('=====================')
-    print( 'Stdev Accuracy %f'%standard_deviation_acc)
-    print('=====================')
-    
-    model = model_cnn(num_classes) 
-    # Fit the final model
-    history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, batch_size=batch_size, callbacks=callbacks, verbose=2)
-   
-    # Final evaluation of the model
-    scores = model.evaluate(X_val, y_val, verbose=0)
-    print("Error: %.2f%%" % (100-scores[1]*100))
-    print("Accuracy: %.2f%%" % (scores[1]*100))
-    
+
+    hparams = [
+      (2, 10),       # kernel1
+      (2, 10),       # kernel2
+      (2, 10),       # kernel3
+      (0.0001, 0.1)  # lr
+    ]
+
+    hyperdrive(objective=objective,
+               hyperparameters=hparams,
+               results_path=args.results_dir,
+               model="GP",
+               n_iterations=100,
+               verbose=True,
+               random_state=0,
+               checkpoints=True)
+
+    # Save the log data frame
+    logger.save()
+
 
 if __name__=="__main__":
     main()
