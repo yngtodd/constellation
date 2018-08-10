@@ -53,8 +53,8 @@ callbacks = [
 n_splits = 5
 
 # get data
-test  = pd.read_csv('../data/csv/fashion-mnist_test.csv')
-train = pd.read_csv('../data/csv/fashion-mnist_train.csv')
+test  = pd.read_csv('../../data/fashion-mnist_test.csv')
+train = pd.read_csv('../../data/fashion-mnist_train.csv')
 print('train shape: {}'.format(train.shape))
 print('test shape: {}'.format(test.shape))
 
