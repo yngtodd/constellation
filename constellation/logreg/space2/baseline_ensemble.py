@@ -6,9 +6,7 @@ from hyperspace.kepler import load_results
 
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, log_loss
-
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier
 
 
 def ensemble(clfs, X_train, y_train, X_test, y_test, nfolds=5):
@@ -107,7 +105,7 @@ def main():
     clfs = []
     for result in results:
         # Use the default settings for every model in the ensemble.
-        model = GradientBoostingClassifier()
+        model = LogisticRegression()
         clfs.append(model)
 
     # Using the training and test sets from `optimize.py`
