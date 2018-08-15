@@ -174,9 +174,9 @@ def objective(params):
     
 def main():
     parser = argparse.ArgumentParser(description='Setup experiment.')
-    parser.add_argument('--results_dir', type=str, help='Path to results directory.')
+    parser.add_argument('--results_dir', type=str, default='./results', help='Path to results directory.')
     parser.add_argument('--log_dir', type=str, default='./logs', help='Path to save logs')
-    parser.add_argument('--data', type=str, default='/Users/youngtodd/constellation/data', help='Path to data')
+    parser.add_argument('--data', type=str, default='/lustre/atlas/proj-shared/csc249/yngtodd/data/fashion', help='Path to data')
     args = parser.parse_args()
     
     # k-fold configuration
