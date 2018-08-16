@@ -1,0 +1,20 @@
+#!/bin/bash
+#BSUB -P CSC249ADOA01 
+#BSUB -J EnsembleCNN 
+#BSUB -o out.o%J
+#BSUB -e err.e%J
+#BSUB -W 02:00
+#BSUB -nnodes 2 
+
+# SummitDev Module
+SUMMITEDEVMODULEDIR=/lustre/atlas/proj-shared/csc264/modules
+[[ -d $SUMMITEDEVMODULEDIR/modulefiles ]] && module use $SUMMITEDEVMODULEDIR/modulefiles
+
+module purge
+module load hyperspace 
+
+export PAMI_IBV_ENABLE_OOO_AR=0
+
+cd /lustre/atlas/proj-shared/csc249/yngtodd/constellation/constellation/cnn/space1
+
+jsrun -n 2 -a 1 -g 4 python optimize.py --results_dir results 

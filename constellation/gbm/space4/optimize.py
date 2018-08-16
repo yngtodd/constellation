@@ -9,6 +9,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 
 from mpi4py import MPI
 from hyperspace import hyperdrive
+from hyperspace.kepler import load_results
 
 from constellation.data.dataloaders import FashionMNIST
 
@@ -50,8 +51,13 @@ def objective(params):
         - Controlled by hyperspaces's hyperdrive function.
         - Order preserved from list passed to hyperdrive's hyperparameters argument.
     """
-    max_depth, n_estimators = params
-    clf = GradientBoostingClassifier(max_depth=max_depth, n_estimators=n_estimators, verbose=1)
+    max_depth, n_estimators, lr, max_features = params
+    clf = GradientBoostingClassifier(
+      max_depth=max_depth, 
+      n_estimators=n_estimators, 
+      learning_rate=lr,
+      max_features=max_features
+    )
     
     clf.fit(X_train, y_train)
     # Training accuracy
@@ -72,7 +78,7 @@ def objective(params):
 
 def main():
     parser = argparse.ArgumentParser(description='Setup experiment.')
-    parser.add_argument('--data_path', type=str, default='/home/todd/kirjasto/constellation/constellation/data/fashion')
+    parser.add_argument('--data_path', type=str, default='/lustre/atlas/proj-shared/csc249/yngtodd/constellation/constellation/data/fashion')
     parser.add_argument('--results_dir', type=str, help='Path to results directory.')
     parser.add_argument('--log_dir', type=str, default='./logs', help='Path to save logs')
     args = parser.parse_args()
@@ -89,7 +95,11 @@ def main():
     X_train, y_train, X_val, y_val, X_test, y_test = fashion.get_data()
 
     hparams = [(2, 10),     # max_depth
-               (10, 100)]   # n_estimators
+               (10, 100),   # n_estimators
+               (0.001, 0.1),# learning_rate
+               (2, 100)]    # max_features
+
+    savepoint = load_results(args.results_dir)
 
     hyperdrive(objective=objective,
                hyperparameters=hparams,
@@ -97,6 +107,7 @@ def main():
                model="GP",
                n_iterations=50,
                verbose=True,
+               restart=savepoint,
                random_state=0,
                checkpoints=True)
 

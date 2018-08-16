@@ -1,0 +1,70 @@
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@summitdev-login1.ccs.ornl.gov>
+Subject: Job 328396: <EnsembleLogReg> in cluster <summitdev> Exited
+
+Job <EnsembleLogReg> was submitted from host <summitdev-login1> by user <yngtodd> in cluster <summitdev> at Wed Aug 15 12:31:02 2018
+Job was executed on host(s) <1*summitdev-login1>, in queue <batch>, as user <yngtodd> in cluster <summitdev> at Wed Aug 15 12:31:03 2018
+                            <20*summitdev-r0c2n11>
+                            <20*summitdev-r0c2n12>
+                            <20*summitdev-r0c2n13>
+                            <20*summitdev-r0c2n17>
+</ccs/home/yngtodd> was used as the home directory.
+</lustre/atlas/proj-shared/csc249/yngtodd/constellation/constellation/logreg/space2> was used as the working directory.
+Started at Wed Aug 15 12:31:03 2018
+Terminated at Wed Aug 15 12:32:10 2018
+Results reported at Wed Aug 15 12:32:10 2018
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -P CSC249ADOA01 
+#BSUB -J EnsembleLogReg 
+#BSUB -o out.o%J
+#BSUB -e err.e%J
+#BSUB -W 02:00
+#BSUB -nnodes 4 
+
+# SummitDev Module
+#SUMMITEDEVMODULEDIR=/lustre/atlas/proj-shared/csc264/modules
+#[[ -d $SUMMITEDEVMODULEDIR/modulefiles ]] && module use $SUMMITEDEVMODULEDIR/modulefiles
+
+#module purge
+#module load hyperspace 
+#module load constellation
+
+export PATH="/lustre/atlas/proj-shared/csc249/yngtodd/books/anaconda3/bin:$PATH"
+export PAMI_IBV_ENABLE_OOO_AR=0
+
+cd /lustre/atlas/proj-shared/csc249/yngtodd/constellation/constellation/logreg/space2
+
+jsrun -n 4 -a 1 -g 4 python optimize.py --results_dir results 
+
+------------------------------------------------------------
+
+TERM_OWNER: job killed by owner.
+Exited with exit code 255.
+
+Resource usage summary:
+
+    CPU time :                                   1.00 sec.
+    Max Memory :                                 48 MB
+    Average Memory :                             48.00 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   169 MB
+    Max Processes :                              5
+    Max Threads :                                30
+    Run time :                                   66 sec.
+    Turnaround time :                            68 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <err.e328396> for stderr output of this job.
+

@@ -1,0 +1,8 @@
+Failed to send signal to pmix server
+Lost connection to pmix_server after reading 0/1344 bytes Success
+[summitdev-login1:105317] PMIX ERROR: UNPACK-PAST-END in file tool/pmix_tool.c at line 105
+READ:: Broken pipe
+Failed to read status, RM_PMIx_spawn(): 0
+ERROR: Other error.
+Could not send stdin to pmix server
+Could not send js_detach request to pmix server

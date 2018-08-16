@@ -1,0 +1,22 @@
+#!/bin/bash
+#BSUB -P CSC249ADOA01 
+#BSUB -J SixteenGBMs 
+#BSUB -o out.o%J
+#BSUB -e err.e%J
+#BSUB -W 02:00
+#BSUB -nnodes 16 
+
+# SummitDev Module
+#SUMMITEDEVMODULEDIR=/lustre/atlas/proj-shared/csc264/modules
+#[[ -d $SUMMITEDEVMODULEDIR/modulefiles ]] && module use $SUMMITEDEVMODULEDIR/modulefiles
+
+#module purge
+#module load hyperspace 
+#module load constellation
+
+export PATH="/lustre/atlas/proj-shared/csc249/yngtodd/books/anaconda3/bin:$PATH"
+export PAMI_IBV_ENABLE_OOO_AR=0
+
+cd /lustre/atlas/proj-shared/csc249/yngtodd/constellation/constellation/gbm/space4
+
+jsrun -n 16 -a 1 -g 4 python optimize.py --results_dir results 

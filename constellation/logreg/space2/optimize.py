@@ -73,7 +73,7 @@ def objective(params):
 
 def main():
     parser = argparse.ArgumentParser(description='Setup experiment.')
-    parser.add_argument('--data_path', type=str, default='/Users/youngtodd/constellation/constellation/data/fashion')
+    parser.add_argument('--data_path', type=str, default='/lustre/atlas/proj-shared/csc249/yngtodd/constellation/constellation/data/fashion')
     parser.add_argument('--results_dir', type=str, help='Path to results directory.')
     parser.add_argument('--log_dir', type=str, default='./logs', help='Path to save logs')
     args = parser.parse_args()

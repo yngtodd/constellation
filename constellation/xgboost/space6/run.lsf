@@ -1,0 +1,12 @@
+#!/bin/bash
+#BSUB -P CSC249ADOA01
+#BSUB -J constellation 
+#BSUB -o out.o%J
+#BSUB -e err.e%J
+#BSUB -W 02:00
+#BSUB -nnodes 32 
+
+export PAMI_IBV_ENABLE_OOO_AR=0
+export PATH="/lustre/atlas/proj-shared/csc249/yngtodd/books/anaconda3/bin:$PATH"
+
+jsrun -n 32 -a 1 -g 4 python optimize.py --results_dir results

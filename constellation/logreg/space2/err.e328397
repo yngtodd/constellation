@@ -1,0 +1,4 @@
+User defined signal 2
+[summitdev-login1:108127] PMIX ERROR: UNPACK-PAST-END in file tool/pmix_tool.c at line 105
+Lost connection to pmix_server after reading 0/1344 bytes Success
+Could not send js_detach request to pmix server
