@@ -1,14 +1,16 @@
 import argparse
 import numpy as np
 
-from optimize import load_data, objective
+from optimize import objective
+from constellation.data.dataloaders import FashionMNIST 
+
 from hyperspace.kepler import load_results
 
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, log_loss
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 
 def ensemble(clfs, X_train, y_train, X_test, y_test, nfolds=5):
@@ -54,8 +56,12 @@ def ensemble(clfs, X_train, y_train, X_test, y_test, nfolds=5):
    
     for iteration, clf in enumerate(clfs):
         print('\n' + '=' * 15)
-        print(f'Iteration {iteration}, GBM Classifier') 
-        print(f'Hyperparameters: max_depth: {clf.max_depth}, learning_rate: {clf.learning_rate:.4f}')
+        print(f'Iteration {iteration}, RF Classifier') 
+        params = f'Hyperparameters: max_depth: {clf.max_depth}, '\
+                 f'n_estimators: {clf.n_estimators}, '\
+                 f'min_samples_split: {clf.min_samples_split}, '\
+                 f'max_features: {clf.max_features}'
+        print(params)
 
         # See how individual models perfom on test set.
         clf.fit(X_train, y_train)
@@ -99,7 +105,7 @@ def ensemble(clfs, X_train, y_train, X_test, y_test, nfolds=5):
 
 def main():
     parser = argparse.ArgumentParser(description='Ensembling HyperSpace models')
-    parser.add_argument('--data_path', type=str, default='/home/todd/kirjasto/constellation/constellation/data/fashion')
+    parser.add_argument('--data_path', type=str, default='/Users/youngtodd/constellation/constellation/data/fashion')
     parser.add_argument('--results_dir', type=str, help='Path to results directory.')
     args = parser.parse_args()
 
@@ -110,8 +116,17 @@ def main():
         # Get domain from best model in each hyperspace
         hyperparams = result.x
         max_depth = hyperparams[0]
-        lr = hyperparams[1]
-        model = GradientBoostingClassifier(max_depth=max_depth, learning_rate=lr)
+        n_estimators = hyperparams[1]
+        min_samples_split = hyperparams[2]
+        max_features = hyperparams[3]
+
+        model = RandomForestClassifier(
+          max_depth=max_depth, 
+          n_estimators=n_estimators,
+          min_samples_split=min_samples_split,
+          max_features=max_features
+        )
+
         clfs.append(model)
 
     fashion = FashionMNIST(args.data_path)
